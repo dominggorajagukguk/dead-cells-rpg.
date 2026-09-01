@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dead Cells - Cursed Prisoner</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas" width="1280" height="720"></canvas>
+
+    <!-- UI Overlay: Authentic Dead Cells HUD -->
+    <div id="ui-overlay">
+      <!-- Top HUD: Stage Badge & Boss Bar -->
+      <div class="hud-top">
+        <div id="stage-badge" class="stage-badge">THE PROMENADE OF THE CONDEMNED</div>
+
+        <!-- Boss Health Bar -->
+        <div id="boss-hud">
+          <div class="boss-title-row">
+            <span id="boss-name">LORD MALAKOR</span>
+            <span id="boss-phase-badge" class="boss-phase-badge">PHASE 1</span>
+          </div>
+          <div class="boss-hp-container">
+            <div id="boss-hp-fill" class="boss-hp-fill"></div>
+          </div>
+        </div>
+
+        <div></div>
+      </div>
+
+      <!-- Center Prompt Banner -->
+      <div id="interaction-prompt">
+        <span class="key-badge">F</span>
+        <span id="interaction-label">Bicara / Buka Peti / Teleport</span>
+      </div>
+
+      <!-- Bottom HUD: Dead Cells Authentic Layout -->
+      <div class="hud-bottom">
+        <div class="hud-bottom-row">
+          <!-- Left: Mutations + 5 Equipment Cards -->
+          <div class="equipment-section">
+            <!-- Mutations / Relics -->
+            <div class="mutations-bar">
+              <div class="mutation-circle" title="Ygdar Orus Li Ox">🩸</div>
+              <div class="mutation-circle" title="Combo Strike">⚔️</div>
+              <div class="mutation-circle" title="Necromancy">💀</div>
+            </div>
+
+            <!-- 5 Equipment Slots -->
+            <div class="slots-container">
+              <!-- Slot 1: Healing Flask -->
+              <div class="slot-card flask">
+                <div id="flask-charges" class="slot-flask-charges">3/3</div>
+                <div class="slot-icon">🧪</div>
+                <div class="slot-key-badge">R / L</div>
+                <div id="flask-cd" class="slot-cooldown"></div>
+              </div>
+
+              <!-- Slot 2: Primary Weapon -->
+              <div class="slot-card primary">
+                <div id="primary-tier" class="slot-tier">I</div>
+                <div id="primary-icon" class="slot-icon">🗡️</div>
+                <div class="slot-key-badge">J / LMB</div>
+                <div id="primary-cd" class="slot-cooldown"></div>
+              </div>
+
+              <!-- Slot 3: Secondary Weapon -->
+              <div class="slot-card secondary">
+                <div id="secondary-tier" class="slot-tier">I</div>
+                <div id="secondary-icon" class="slot-icon">🏹</div>
+                <div class="slot-key-badge">K / RMB</div>
+                <div id="secondary-cd" class="slot-cooldown"></div>
+              </div>
+
+              <!-- Slot 4: Skill 1 -->
+              <div class="slot-card skill1">
+                <div id="skill1-tier" class="slot-tier">I</div>
+                <div id="skill1-icon" class="slot-icon">💣</div>
+                <div class="slot-key-badge">Q</div>
+                <div id="skill1-cd" class="slot-cooldown"></div>
+              </div>
+
+              <!-- Slot 5: Skill 2 -->
+              <div class="slot-card skill2">
+                <div id="skill2-tier" class="slot-tier">I</div>
+                <div id="skill2-icon" class="slot-icon">❄️</div>
+                <div class="slot-key-badge">E</div>
+                <div id="skill2-cd" class="slot-cooldown"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Currencies & Holographic Minimap -->
+          <div class="hud-bottom-right">
+            <div class="currencies-bar">
+              <div class="currency-cell">
+                <span>💠</span>
+                <span id="cells-val">5</span>
+              </div>
+              <div class="currency-gold">
+                <span>🪙</span>
+                <span id="gold-val">50</span>
+              </div>
+            </div>
+            <!-- Translucent Minimap -->
+            <canvas id="minimap-canvas" width="170" height="100"></canvas>
+          </div>
+        </div>
+
+        <!-- Full-Width Bottom Health Bar with Stat Boxes -->
+        <div class="vitality-bar-wrapper">
+          <div class="stat-scrolls-row">
+            <div class="stat-box brutality" id="stat-brutality-val">1</div>
+            <div class="stat-box tactics" id="stat-tactics-val">1</div>
+            <div class="stat-box survival" id="stat-survival-val">1</div>
+          </div>
+
+          <div class="health-bar-container">
+            <div id="player-hp-rally" class="health-bar-rally"></div>
+            <div id="player-hp-fill" class="health-bar-fill"></div>
+            <div id="player-hp-text" class="health-bar-text">120 / 120</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notification">CHECKPOINT ACTIVATED!</div>
+
+    <!-- Interactive NPC / Shop Modal -->
+    <div id="npc-modal" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div id="npc-avatar" class="npc-avatar">🧙‍♂️</div>
+          <div>
+            <div id="npc-name" class="modal-title">The Collector</div>
+            <div id="npc-role" class="npc-role">Master of Dead Cells & Relics</div>
+          </div>
+        </div>
+        <div id="npc-dialog" class="dialog-text">
+          "Bawakan aku Dead Cells dari monster-monster terkutuk itu, dan aku akan membuka kekuatan terlarang untukmu!"
+        </div>
+        <div id="shop-container" class="shop-items-grid"></div>
+        <div class="modal-actions">
+          <button id="modal-close-btn" class="btn btn-secondary">Tutup (ESC / F)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll Selection Modal -->
+    <div id="scroll-modal" class="modal-backdrop">
+      <div class="modal-card" style="border-color: #ffc83b;">
+        <div class="modal-header">
+          <div class="npc-avatar">📜</div>
+          <div>
+            <div class="modal-title" style="color: #ffc83b;">SCROLL OF POWER</div>
+            <div class="npc-role">Pilih jalur evolusi karaktermu</div>
+          </div>
+        </div>
+        <div class="shop-items-grid">
+          <div class="shop-item-card" onclick="window.game.chooseScroll('brutality')">
+            <div class="shop-item-name" style="color: var(--brutality);">⚔️ BRUTALITY</div>
+            <div class="shop-item-desc">+65% Melee Damage & +35% HP</div>
+          </div>
+          <div class="shop-item-card" onclick="window.game.chooseScroll('tactics')">
+            <div class="shop-item-name" style="color: var(--tactics);">🏹 TACTICS</div>
+            <div class="shop-item-desc">+65% Ranged & Skill Damage & +25% HP</div>
+          </div>
+          <div class="shop-item-card" onclick="window.game.chooseScroll('survival')">
+            <div class="shop-item-name" style="color: var(--survival);">🛡️ SURVIVAL</div>
+            <div class="shop-item-desc">+75% HP Max & +30% Flask Heals</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameover-modal" class="modal-backdrop">
+      <div class="modal-card" style="text-align: center; border-color: #ff1744;">
+        <h1 style="font-family: 'Cinzel', serif; font-size: 44px; color: #ff1744; text-shadow: 0 0 24px #ff1744;">YOU
+          DIED</h1>
+        <p class="dialog-text">Tubuhmu hancur, namun sel-sel kutukan membawamu kembali ke kristal checkpoint terdekat.
+        </p>
+        <div class="modal-actions" style="justify-content: center;">
+          <button id="respawn-btn" class="btn btn-primary">Respawn di Checkpoint</button>
+          <button id="restart-btn" class="btn btn-secondary">Mulai Dari Awal</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="victory-modal" class="modal-backdrop">
+      <div class="modal-card" style="text-align: center; border-color: #ffd700;">
+        <h1 style="font-family: 'Cinzel', serif; font-size: 44px; color: #ffd700; text-shadow: 0 0 24px #ffd700;">
+          VICTORY!</h1>
+        <p class="dialog-text">Kamu telah mengalahkan <b>Lord Malakor, The Cursed Alchemist King</b> dan membebaskan
+          dungeon dari kutukan abadi!</p>
+        <div class="modal-actions" style="justify-content: center;">
+          <button id="victory-restart-btn" class="btn btn-primary">Main Lagi (New Run+)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Start Overlay -->
+    <div id="start-overlay" class="modal-backdrop active" style="background: rgba(4, 4, 10, 0.94);">
+      <div class="modal-card" style="text-align: center; max-width: 680px; border-color: var(--tactics);">
+        <h1
+          style="font-family: 'Cinzel', serif; font-size: 44px; font-weight: 900; background: linear-gradient(135deg, #ff334b, #ffc83b, #00e5ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px;">
+          DEAD CELLS: CURSED PRISONER
+        </h1>
+        <p style="color: var(--text-muted); font-size: 17px; margin-top: -10px;">Fast-Paced 2D Action Roguelite Dungeon
+          Crawler</p>
+
+        <div
+          style="background: rgba(15, 20, 32, 0.85); padding: 18px; border-radius: 8px; text-align: left; font-size: 15px; line-height: 1.6; border: 1px solid rgba(255,255,255,0.12);">
+          <p>🔥 <b>Karakter & Combat:</b> Bergerak dengan WASD/Arrow, Double Jump, Roll Dodge (Shift/K) untuk i-frames,
+            3-hit Melee combo (J/LMB), Secondary Weapon (K/RMB), dan Skill mematikan (Q & E).</p>
+          <p>🚪 <b>Pecahkan Pintu:</b> Tekan Serang (J) atau Dobrak Pintu Kayu untuk menghancurkannya dan memicu kilau
+            cahaya!</p>
+          <p>💀 <b>Kill to Get Money & Cells:</b> Kalahkan monster untuk mengumpulkan Gold & Dead Cells!</p>
+          <p>🧙‍♂️ <b>Upgrade & NPC:</b> Temui The Collector & Blacksmith untuk upgrade senjata dan stats.</p>
+        </div>
+
+        <div class="modal-actions" style="justify-content: center; margin-top: 10px;">
+          <button id="start-game-btn" class="btn btn-primary" style="font-size: 20px; padding: 14px 44px;">
+            ⚔️ MULAI PETUALANGAN
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="src/audio.js"></script>
+  <script src="src/particles.js"></script>
+  <script src="src/sprites.js"></script>
+  <script src="src/items.js"></script>
+  <script src="src/enemies.js"></script>
+  <script src="src/levels.js"></script>
+  <script src="src/npc.js"></script>
+  <script src="src/player.js"></script>
+  <script src="src/game.js"></script>
+</body>
+
+</html>
