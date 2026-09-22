@@ -1,68 +1,135 @@
-# 🗡️ DEAD CELL: CURSED PRISONER (2D Action-RPG Roguelite)
+<p align="center">
+  <img src="assets/banner.jpg" alt="Dead Cell: Cursed Prisoner Banner" width="100%" />
+</p>
 
-Game web 2D Action-RPG berkecepatan tinggi yang terinspirasi oleh **Dead Cells**. Menampilkan aksi eksplorasi dungeon, pertarungan hack-and-slash yang intens, upgrade status RPG, sistem checkpoint teleportasi, interaksi NPC pedagang, hingga pertarungan multi-fase melawan Boss **Lord Malakor**.
+<h1 align="center">🗡️ DEAD CELL: CURSED PRISONER</h1>
+
+<p align="center">
+  <strong>2D Fast-Paced Action-RPG & Roguelite Web Game</strong><br>
+  Terinspirasi dari gameplay dinamis <em>Dead Cells</em> — pertarungan hack-and-slash intens, eksplorasi dungeon berliku, sistem upgrade status RPG, dan pertarungan boss multi-fase!
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Language-JavaScript%20ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/Rendering-HTML5%20Canvas-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5 Canvas" />
+  <img src="https://img.shields.io/badge/Audio-Web%20Audio%20API-9cf?style=for-the-badge" alt="Web Audio API" />
+  <img src="https://img.shields.io/badge/Genre-Roguelite%20Action%20RPG-crimson?style=for-the-badge" alt="Genre" />
+</p>
+
+---
+
+## 📖 Tentang Game
+
+**Dead Cell: Cursed Prisoner** adalah game aksi platformer 2D yang berjalan langsung di web browser. Anda bermain sebagai sang tawanan terkutuk (*The Beheaded*) yang harus membelah lorong-lorong dungeon berbahaya, mengumpulkan sel dan emas dari monster, membeli persenjataan legendaris, dan mengalahkan penguasa tirani alkimia, **Lord Malakor**.
+
+<br>
+
+<div align="center">
+  <table>
+    <tr>
+      <td width="50%" align="center">
+        <img src="assets/cursed_prisoner.jpg" alt="The Beheaded Hero" width="100%" />
+        <br><strong>🗡️ The Cursed Prisoner</strong>
+      </td>
+      <td width="50%" align="center">
+        <img src="assets/boss_malakor.jpg" alt="Lord Malakor Boss" width="100%" />
+        <br><strong>👑 Lord Malakor (Final Boss)</strong>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ---
 
 ## 🎮 Kontrol Game (Controls)
 
-| Tombol / Tombol Mouse | Aksi |
-| :--- | :--- |
-| **A / D** atau **Panah Kiri / Kanan** | Bergerak Kiri / Kanan |
-| **W** / **Space** / **Panah Atas** | Melompat & **Double Jump** |
-| **S + Space** (saat di udara) | **Down-Smash** (Ground Slam dengan efek getaran layar & ledakan AoE) |
-| **Shift** / **K** | **Dodge Roll** (kebal serangan / *i-frames* dengan efek bayangan) |
-| **J** / **Klik Kiri Mouse** | **Primary Weapon Attack** (3-Hit Combo dengan tebasan dinamis & Critical) |
-| **K** / **Klik Kanan Mouse** | **Secondary Weapon Attack** (Frost Bow, Electric Whip, Kunai) |
-| **Q** | **Active Skill 1** (Cluster Grenade / Phaser Strike) |
-| **E** | **Active Skill 2** (Frost Blast / Sinew Slicer Turret) |
-| **R** | **Health Flask** (Minum ramuan penyembuh HP) |
-| **F** | **Interaksi** (Bicara ke NPC, Buka Peti Harta, Aktifkan Checkpoint, Ganti Senjata) |
-| **ESC** | Menutup menu dialog / toko |
+| Tombol / Mouse | Aksi | Deskripsi |
+| :--- | :--- | :--- |
+| **A / D** atau **◄ / ►** | **Bergerak** | Berlari ke kiri atau ke kanan |
+| **W** / **Space** / **▲** | **Lompat** | Lompat biasa & **Double Jump** di udara |
+| **S + Space** (di udara) | **Down-Smash** | Menghantam tanah dengan getaran layar & ledakan AoE |
+| **Shift** / **K** | **Dodge Roll** | Berguling cepat (*i-frames* kebal serangan musuh) |
+| **J** / **Klik Kiri** | **Primary Attack** | Kombo 3-serangan pedang cepat & peluang Critical |
+| **K** / **Klik Kanan** | **Secondary Attack** | Serangan jarak jauh (Frost Bow, Electric Whip, Kunai) |
+| **Q** | **Skill 1** | Melempar *Cluster Grenade* / *Phaser Strike* |
+| **E** | **Skill 2** | Membekukan musuh (*Frost Blast*) / pasang *Sinew Turret* |
+| **R** | **Health Flask** | Meminum ramuan penyembuh darah |
+| **F** | **Interaksi** | Bicara ke NPC, buka Peti, aktifkan Checkpoint, ganti Senjata |
+| **ESC** | **Tutup Menu** | Menutup jendela dialog toko & panduan kontrol |
 
 ---
 
-## ✨ Fitur-Fitur Utama Game
+## 🏰 Eksplorasi Dungeon & Lingkungan
 
-### 1. ⚔️ Fast-Paced Combat & Rally Mechanic
-- **The Beheaded**: Karakter lincah dengan syal/jubah dinamis dan kepala berapi berkobar.
-- **Rally Health Mechanic**: Saat terkena serangan musuh, sebagian HP akan menjadi *Rally Bar* (oranye). Serang musuh kembali dengan cepat untuk merebut kembali HP yang hilang!
-- **Juicy Combat Feel**: Getaran layar (*Screen Shake*), *Hit-stop freeze frame*, semburan darah & percikan percikan api, serta angka damage melayang beraneka warna (*Floating Damage Numbers*).
+<p align="center">
+  <img src="assets/ramparts_bg.jpg" alt="The Ramparts Stage" width="100%" />
+</p>
 
-### 2. 🏰 3 Level Dungeon Menantang
-- **Stage 1: Prisoners' Quarters**: Lorong penjara bawah tanah yang lembap, jebakan duri, zombi pemotong, pemanah kerangka, dan toko *Goblin Merchant*.
-- **Stage 2: The Ramparts**: Puncak menara benteng tinggi, lompatan tebing, musuh perisai berat, iblis *Phaser* yang bisa teleportasi, dan ruang suci *The Collector*.
-- **Stage 3: Crypt of the Sovereign**: Arena takhta megah dengan arsitektur gothic tempat bernaungnya Boss pamungkas.
+### 🗺️ Stage & Level:
+1. **Stage 1: Prisoners' Quarters** — Lorong bawah tanah suram penuh jebakan duri, zombi pemotong, pemanah tengkorak, dan pedagang *Goblin Merchant*.
+2. **Stage 2: The Ramparts** — Puncak menara benteng terjal di kala senja, lompatan jurang berisiko, musuh berperisai baja, iblis *Phaser* bertaring kilat, dan altar suci *The Collector*.
+3. **Stage 3: Crypt of the Sovereign** — Arena takhta gothic megah tempat bertarungnya sang penguasa kegelapan, Boss Lord Malakor.
 
-### 3. 👑 Boss Unik & Kreatif: "Lord Malakor, The Cursed Alchemist King"
-- **Phase 1**: Tebasan pedang raksasa & *Shockwave Ground Slam*.
-- **Phase 2 (HP < 65%)**: Hujan ramuan alkimia beracun (*Alchemical Storm*) & ledakan api.
-- **Phase 3 (HP < 30%)**: *Chaos Overdrive* dengan kecepatan tinggi dan rentetan peluru laser energi.
+---
 
-### 4. 🪙 Kill to Get Money, Dead Cells & Upgrade
-- Monster yang dikalahkan akan menjatuhkan **Gold** dan **Dead Cells**.
-- Kumpulkan **Scroll of Power** untuk memilih peningkatan:
-  - ⚔️ **Brutality**: Meningkatkan Melee Damage & HP.
-  - 🏹 **Tactics**: Meningkatkan Ranged Damage, Cooldown Skill & HP.
-  - 🛡️ **Survival**: Meningkatkan Max HP & efektivitas Healing Flask.
-- Buka peti harta karun untuk menemukan senjata langka ber-tier tinggi.
+## ✨ Fitur-Fitur Unggulan
 
-### 5. 🧙‍♂️ Interaksi NPC
-- **Goblin Merchant**: Membeli senjata baru (*Vorpan of Doom*, *Hattori Blood Katana*) dan mengisi ulang botol ramuan HP menggunakan Gold.
-- **The Collector**: Menempa peningkatan permanen (*Max Flask charges*, *Weapon Tier Forge*, *Brutality Rune*) menggunakan Dead Cells.
+### ⚔️ 1. Fast-Paced Combat & Rally Mechanic
+- **Rally HP Recovery**: Ketika terkena damage musuh, sebagian HP berubah menjadi oranye (*Rally Bar*). Balas serang musuh dengan cepat sebelum bar habis untuk merebut kembali HP!
+- **Juicy Combat Feel**: Dilengkapi *Screen Shake*, *Hit-stop freeze*, percikan darah, efek partikel bara api, dan *Floating Damage Numbers*.
 
-### 6. 🔮 Checkpoint & Respawn
-- Kristal checkpoint teleportasi tersebar di berbagai lokasi dungeon.
-- Saat diaktifkan, checkpoint akan menyimpan lokasi pemain, memulihkan HP, dan mengisi penuh Flask.
-- Jika pemain gugur (*YOU DIED*), pemain dapat memilih untuk langsung bangkit kembali di checkpoint terakhir!
+### 👑 2. Pertarungan Boss Multi-Fase: Lord Malakor
+- **Fase 1**: Tebasan pedang raksasa & gelombang kejut *Shockwave Ground Slam*.
+- **Fase 2 (HP < 65%)**: Hujan ramuan alkimia beracun (*Alchemical Storm*) & semburan api ungu.
+- **Fase 3 (HP < 30%)**: Mode *Chaos Overdrive* berkecepatan tinggi dengan rentetan proyektil laser energi.
 
-### 7. 🔊 Procedural Audio & Dynamic BGM
-- Efek suara sintetis Web Audio API tanpa perlu aset eksternal: tebasan pedang, hentakan ground slam, suara panah, ledakan granat, seruan boss, dan musik latar dungeon adaptif.
+### 🪙 3. Ekonomi, Loot & Status RPG
+- Kalahkan musuh untuk mendapatkan **Gold** dan **Dead Cells**.
+- Kumpulkan **Scroll of Power** untuk meningkatkan 3 cabang status:
+  - ⚔️ **Brutality**: Peningkatan damage jarak dekat & HP.
+  - 🏹 **Tactics**: Peningkatan damage jarak jauh & reduksi cooldown skill.
+  - 🛡️ **Survival**: Peningkatan maksimal HP & efektivitas Health Flask.
+- Buka peti harta karun untuk menemukan senjata ber-tier tinggi (*Tier I - V*).
+
+### 🧙‍♂️ 4. Interaksi NPC & Toko
+- **Goblin Merchant**: Menjual berbagai macam senjata unik (*Vorpan of Doom*, *Hattori Blood Katana*) serta isi ulang botol ramuan.
+- **The Collector**: Menempa upgrade permanen (*Max Flask Charges*, *Weapon Tier Forge*, *Brutality Rune*) dengan menukarkan Dead Cells.
+
+### 🔮 5. Sistem Checkpoint & Respawn
+- Aktifkan kristal checkpoint teleportasi untuk memulihkan seluruh HP, mengisi ulang Flask, dan menyimpan titik hidup.
+- Saat gugur (*YOU DIED*), pemain dapat langsung bangkit kembali di checkpoint terakhir tanpa harus mengulang dari awal.
+
+### 🔊 6. Procedural Audio & Dynamic BGM
+- Musik latar dinamis dan sound effect sintetis yang dibangun menggunakan **Web Audio API** native (tidak memerlukan file audio eksternal).
 
 ---
 
 ## 🚀 Cara Menjalankan Game
 
-1. Cukup buka file `index.html` langsung di browser Anda (Google Chrome, Microsoft Edge, Firefox, atau browser modern lainnya).
-2. Atau jalankan server lokal seperti `python -m http.server 3000` lalu akses `http://localhost:3000`.
-3. Klik tombol **"MULAI PETUALANGAN"** untuk memulai permainan.
+1. **Clone repositori ini:**
+   ```bash
+   git clone https://github.com/username/dead-cells-rpg.git
+   cd dead-cells-rpg
+   ```
+
+2. **Jalankan Game:**
+   - Cukup buka file `index.html` langsung di browser favorit Anda (Google Chrome, Microsoft Edge, Mozilla Firefox, dll).
+   - Atau jalankan web server lokal:
+     ```bash
+     # Menggunakan Python
+     python -m http.server 3000
+
+     # Atau menggunakan Node.js (npx serve)
+     npx serve .
+     ```
+   - Buka `http://localhost:3000` di browser.
+
+3. Klik tombol **"MULAI PETUALANGAN"** dan nikmati pertarungan! 🎮🔥
+
+---
+
+## 📜 Lisensi & Atribusi
+
+Proyek ini dibuat untuk tujuan edukasi dan hiburan, terinspirasi dari mahakarya *Dead Cells* oleh Motion Twin. 
+
+Distributed under the **MIT License**.

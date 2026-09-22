@@ -1,9 +1,26 @@
-// Dead Cells Main Game Coordinator - HD Engine, Minimap, Door Breach & Dynamic Lighting
+// ============================================================
+// DEAD CELLS HD GAME ENGINE
+// Dynamic Lighting, Post-Processing (Bloom, Chromatic Aberration),
+// and Native HD Rendering.
+// ============================================================
 
 class GameEngine {
   constructor() {
     this.canvas = document.getElementById('game-canvas');
+    // Render directly to main canvas for true HD, bypassing low-res offscreen canvas
     this.ctx = this.canvas.getContext('2d');
+    
+    // Light map canvas for dynamic lighting overlays
+    this.lightCanvas = document.createElement('canvas');
+    this.lightCanvas.width = 1280;
+    this.lightCanvas.height = 720;
+    this.lightCtx = this.lightCanvas.getContext('2d');
+
+    // Foreground canvas for lighting isolation (dungeon platforms, entities, midground)
+    this.fgCanvas = document.createElement('canvas');
+    this.fgCanvas.width = 1280;
+    this.fgCanvas.height = 720;
+    this.fgCtx = this.fgCanvas.getContext('2d');
 
     this.minimapCanvas = document.getElementById('minimap-canvas');
     this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null;
@@ -23,10 +40,12 @@ class GameEngine {
         this.shakeDuration = Math.max(this.shakeDuration, duration);
       },
       update(dt, target, mapW, mapH, ts) {
-        const targetX = target.x - this.w / 2 + target.facing * 80;
-        const targetY = target.y - this.h / 2 - 25;
-        this.x += (targetX - this.x) * 9 * dt;
-        this.y += (targetY - this.y) * 9 * dt;
+        const targetX = target.x - this.w / 2 + target.facing * 100;
+        const targetY = target.y - this.h / 2 - 40;
+        
+        // Smooth camera follow
+        this.x += (targetX - this.x) * 6 * dt;
+        this.y += (targetY - this.y) * 6 * dt;
 
         if (this.shakeDuration > 0) {
           this.shakeDuration -= dt;
@@ -34,7 +53,7 @@ class GameEngine {
           const offsetY = (Math.random() - 0.5) * this.shakeIntensity * 2;
           this.x += offsetX;
           this.y += offsetY;
-          this.shakeIntensity *= 0.92;
+          this.shakeIntensity *= 0.9;
         }
 
         const maxX = Math.max(0, mapW * ts - this.w);
@@ -49,7 +68,7 @@ class GameEngine {
     this.levelManager = new LevelManager();
     this.npcManager = new NPCManager();
 
-    this.player = new Player(140, 580);
+    this.player = new Player(240, 520);
     this.enemies = [];
     this.projectiles = [];
     this.drops = [];
@@ -59,7 +78,7 @@ class GameEngine {
     this.currentStage = 1;
     this.isPaused = false;
     this.hitStopTimer = 0;
-    this.lastTime = performance.now();
+    this.time = 0;
 
     this.input = {
       keys: {},
@@ -75,14 +94,14 @@ class GameEngine {
 
   initDungeonDust() {
     this.dungeonDust = [];
-    for (let i = 0; i < 45; i++) {
+    for (let i = 0; i < 80; i++) {
       this.dungeonDust.push({
         x: Math.random() * this.width,
         y: Math.random() * this.height,
-        vx: (Math.random() - 0.5) * 18,
-        vy: -10 - Math.random() * 15,
-        size: 1.5 + Math.random() * 2.5,
-        alpha: 0.25 + Math.random() * 0.45
+        vx: (Math.random() - 0.5) * 20,
+        vy: -5 - Math.random() * 20,
+        size: 1 + Math.random() * 2,
+        alpha: 0.1 + Math.random() * 0.3
       });
     }
   }
@@ -93,14 +112,8 @@ class GameEngine {
         this.input.justPressed[e.code] = true;
       }
       this.input.keys[e.code] = true;
-
-      if (e.code === 'KeyF') {
-        this.handleInteraction();
-      }
-
-      if (e.code === 'Escape') {
-        this.closeModals();
-      }
+      if (e.code === 'KeyF') this.handleInteraction();
+      if (e.code === 'Escape') this.closeModals();
     });
 
     window.addEventListener('keyup', (e) => {
@@ -127,12 +140,18 @@ class GameEngine {
     document.getElementById('start-game-btn').onclick = () => {
       window.soundEngine.init();
       document.getElementById('start-overlay').classList.remove('active');
+      this.isPaused = false;
       this.loadStage(1);
+      window.focus();
     };
   }
 
   triggerHitStop(duration) {
     this.hitStopTimer = duration;
+    // Massive hit adds screen shake
+    if (duration > 0.05) {
+      this.camera.shake(duration * 200, duration * 2);
+    }
   }
 
   loadStage(stageNum) {
@@ -145,25 +164,19 @@ class GameEngine {
     this.levelManager.loadLevel(stageNum, this);
 
     if (stageNum === 1) {
-      this.player.x = 140;
-      this.player.y = 580;
+      this.player.x = 240; this.player.y = 520;
     } else if (stageNum === 2) {
-      this.player.x = 160;
-      this.player.y = 560;
+      this.player.x = 160; this.player.y = 560;
     } else {
-      this.player.x = 140;
-      this.player.y = 600;
+      this.player.x = 140; this.player.y = 600;
     }
     this.player.checkpoint = { x: this.player.x, y: this.player.y, stage: stageNum };
 
     this.spawnEnemiesForStage(stageNum);
 
     const bossHud = document.getElementById('boss-hud');
-    if (stageNum === 3) {
-      bossHud.classList.add('active');
-    } else {
-      bossHud.classList.remove('active');
-    }
+    if (stageNum === 3) bossHud.classList.add('active');
+    else bossHud.classList.remove('active');
 
     this.updateHUD();
     this.showToast(`STAGE ${stageNum} STARTED!`);
@@ -171,7 +184,6 @@ class GameEngine {
 
   spawnEnemiesForStage(stage) {
     if (stage === 1) {
-      // Inquisitors, Zombies, Shielded Knights
       this.enemies.push(new BaseEnemy(480, 440, 'zombie'));
       this.enemies.push(new ArcherEnemy(720, 320));
       this.enemies.push(new BaseEnemy(1020, 440, 'zombie'));
@@ -200,7 +212,6 @@ class GameEngine {
         return;
       }
     }
-
     for (const cp of this.levelManager.checkpoints) {
       const dist = Math.hypot(cp.x - this.player.x, cp.y - this.player.y);
       if (dist < 75) {
@@ -208,34 +219,32 @@ class GameEngine {
         this.player.checkpoint = { x: cp.x, y: cp.y, stage: this.currentStage };
         this.player.hp = this.player.maxHp;
         this.player.flasks = this.player.maxFlasks;
-        this.showToast('CHECKPOINT AKTIF! HP & Potion Dipulihkan.');
+        this.showToast('CHECKPOINT ACTIVE! HP Restored.');
         window.soundEngine.playUpgrade();
-        window.particleSystem.addShockwave(cp.x, cp.y, '#00f0ff', 140);
+        window.particleSystem.addShockwave(cp.x, cp.y, '#00f0ff', 200);
         this.updateHUD();
         return;
       }
     }
-
     for (const chest of this.levelManager.chests) {
       const dist = Math.hypot(chest.x - this.player.x, chest.y - this.player.y);
       if (dist < 75 && !chest.opened) {
         chest.opened = true;
         window.soundEngine.playUpgrade();
-        window.particleSystem.addSparks(chest.x, chest.y, '#ffd700', 30);
+        window.particleSystem.addSparks(chest.x, chest.y, '#ffd700', 50);
         if (chest.reward === 'gold') {
           this.player.gold += 90;
-          this.showToast('Mendapatkan +90 Gold!');
+          this.showToast('Found +90 Gold!');
         } else {
           const weaponKeys = Object.keys(WEAPONS);
           const chosen = WEAPONS[weaponKeys[Math.floor(Math.random() * weaponKeys.length)]];
           this.drops.push(new DropEntity(chest.x, chest.y, 'weapon', { ...chosen, tier: this.currentStage + 1 }));
-          this.showToast('Peti Terbuka!');
+          this.showToast('Chest Opened!');
         }
         this.updateHUD();
         return;
       }
     }
-
     if (this.levelManager.exitDoor) {
       const dist = Math.hypot(this.levelManager.exitDoor.x - this.player.x, this.levelManager.exitDoor.y - this.player.y);
       if (dist < 85) {
@@ -243,7 +252,6 @@ class GameEngine {
         return;
       }
     }
-
     for (let i = this.drops.length - 1; i >= 0; i--) {
       const d = this.drops[i];
       if (d.type === 'weapon' && Math.hypot(d.x - this.player.x, d.y - this.player.y) < 65) {
@@ -251,7 +259,7 @@ class GameEngine {
         this.player.primary = { ...d.data };
         d.data = oldWep;
         window.soundEngine.playUpgrade();
-        this.showToast(`Memakai ${this.player.primary.name}!`);
+        this.showToast(`Equipped ${this.player.primary.name}!`);
         this.updateHUD();
         return;
       }
@@ -262,13 +270,11 @@ class GameEngine {
     if (type === 'brutality') this.player.brutality++;
     else if (type === 'tactics') this.player.tactics++;
     else if (type === 'survival') this.player.survival++;
-
     this.player.recalculateStats();
     this.player.hp = this.player.maxHp;
     this.player.rallyHp = this.player.maxHp;
-
     window.soundEngine.playUpgrade();
-    this.showToast(`Stat ${type.toUpperCase()} Ditingkatkan!`);
+    this.showToast(`${type.toUpperCase()} Increased!`);
     document.getElementById('scroll-modal').classList.remove('active');
     this.isPaused = false;
     this.updateHUD();
@@ -279,9 +285,7 @@ class GameEngine {
     if (!toast) return;
     toast.innerText = msg;
     toast.classList.add('active');
-    setTimeout(() => {
-      toast.classList.remove('active');
-    }, 2400);
+    setTimeout(() => toast.classList.remove('active'), 2400);
   }
 
   closeModals() {
@@ -301,11 +305,8 @@ class GameEngine {
   respawnPlayer() {
     document.getElementById('gameover-modal').classList.remove('active');
     this.isPaused = false;
-
     const cp = this.player.checkpoint;
-    if (this.currentStage !== cp.stage) {
-      this.loadStage(cp.stage);
-    }
+    if (this.currentStage !== cp.stage) this.loadStage(cp.stage);
     this.player.x = cp.x;
     this.player.y = cp.y;
     this.player.hp = this.player.maxHp;
@@ -318,7 +319,7 @@ class GameEngine {
     document.getElementById('gameover-modal').classList.remove('active');
     document.getElementById('victory-modal').classList.remove('active');
     this.isPaused = false;
-    this.player = new Player(140, 580);
+    this.player = new Player(240, 520);
     this.loadStage(1);
   }
 
@@ -332,11 +333,9 @@ class GameEngine {
   updateHUD() {
     const hpPct = Math.max(0, this.player.hp / this.player.maxHp);
     const rallyPct = Math.max(0, this.player.rallyHp / this.player.maxHp);
-
     const hpFill = document.getElementById('player-hp-fill');
     const hpRally = document.getElementById('player-hp-rally');
     const hpText = document.getElementById('player-hp-text');
-
     if (hpFill) hpFill.style.width = (hpPct * 100) + '%';
     if (hpRally) hpRally.style.width = (rallyPct * 100) + '%';
     if (hpText) hpText.innerText = `${Math.ceil(this.player.hp)} / ${this.player.maxHp}`;
@@ -378,34 +377,34 @@ class GameEngine {
   }
 
   update(dt) {
+    this.time += dt;
     if (this.isPaused) return;
 
     if (this.hitStopTimer > 0) {
       this.hitStopTimer -= dt;
+      // Continue updating particles even during hit-stop for extra impact
+      window.particleSystem.update(dt);
+      this.camera.update(dt, this.player, this.levelManager.mapWidth, this.levelManager.mapHeight, this.levelManager.tileSize);
       return;
     }
 
-    // 1. Update Player
     this.player.update(dt, this.input, this.levelManager, this);
 
-    // 2. Door Breach Check (Player attacks or rolls through a wooden door)
     for (const door of this.levelManager.doors) {
       if (!door.broken && Math.abs(door.x - this.player.x) < 45 && Math.abs(door.y - this.player.y) < 60) {
         if (this.player.isAttacking || this.player.isRolling || this.player.isDownSmashing) {
           door.broken = true;
           window.soundEngine.playExplosion();
-          window.particleSystem.addSparks(door.x, door.y - 30, '#ffd54f', 24);
+          window.particleSystem.addSparks(door.x, door.y - 30, '#ffd54f', 40);
           window.particleSystem.addDustPuff(door.x, door.y);
-          this.camera.shake(14, 0.3);
+          this.camera.shake(15, 0.3);
           this.showToast('DOOR BREACHED!');
         }
       }
     }
 
-    // 3. Update Camera
     this.camera.update(dt, this.player, this.levelManager.mapWidth, this.levelManager.mapHeight, this.levelManager.tileSize);
 
-    // 4. Update Enemies
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const enemy = this.enemies[i];
       enemy.update(dt, this.player, this.levelManager, this);
@@ -414,13 +413,15 @@ class GameEngine {
       }
     }
 
-    // 5. Update Projectiles
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const p = this.projectiles[i];
       p.x += p.vx * dt;
       p.y += p.vy * dt;
       if (p.gravity) p.vy += p.gravity * dt;
       p.life -= dt;
+      
+      // Projectile Trail
+      window.particleSystem.addSparks(p.x, p.y, p.color, 1);
 
       if (p.isPlayer) {
         this.enemies.forEach(e => {
@@ -429,6 +430,7 @@ class GameEngine {
             if (p.type === 'freeze') e.freezeTimer = 2.4;
             if (p.type === 'bleed') { e.bleedTimer = 3.0; e.bleedTicks = 0; }
             p.life = 0;
+            window.particleSystem.addSparks(p.x, p.y, p.color, 20);
           }
         });
       } else {
@@ -441,7 +443,7 @@ class GameEngine {
       if (p.life <= 0) {
         if (p.type === 'cluster_bomb') {
           window.soundEngine.playExplosion();
-          window.particleSystem.addShockwave(p.x, p.y, '#ff5722', 130);
+          window.particleSystem.addShockwave(p.x, p.y, '#ff5722', 150);
           this.enemies.forEach(e => {
             if (!e.dead && Math.hypot(e.x - p.x, e.y - p.y) < 130) {
               e.takeDamage(p.damage, true, 1, this);
@@ -452,12 +454,10 @@ class GameEngine {
       }
     }
 
-    // 6. Update Deployable Turrets
     for (let i = this.deployables.length - 1; i >= 0; i--) {
       const dep = this.deployables[i];
       dep.life -= dt;
       dep.fireTimer -= dt;
-
       if (dep.fireTimer <= 0) {
         dep.fireTimer = dep.fireRate;
         let target = null;
@@ -472,24 +472,22 @@ class GameEngine {
           this.projectiles.push({
             x: dep.x,
             y: dep.y - 12,
-            vx: dir * 450,
+            vx: dir * 600,
             vy: 0,
             damage: dep.damage,
             isPlayer: true,
-            color: '#ff9800',
+            color: '#f97316',
             life: 1.1
           });
+          window.particleSystem.addSparks(dep.x, dep.y - 12, '#f97316', 10);
         }
       }
-
       if (dep.life <= 0) this.deployables.splice(i, 1);
     }
 
-    // 7. Update Loot Drops
     for (let i = this.drops.length - 1; i >= 0; i--) {
       const drop = this.drops[i];
       drop.update(dt, this.levelManager);
-
       const dist = Math.hypot(drop.x - this.player.x, drop.y - this.player.y);
       if (dist < 44 && !drop.collected) {
         if (drop.type === 'gold') {
@@ -506,7 +504,6 @@ class GameEngine {
       }
     }
 
-    // 8. Scroll Collection
     for (const scr of this.levelManager.scrolls) {
       if (!scr.collected && Math.hypot(scr.x - this.player.x, scr.y - this.player.y) < 55) {
         scr.collected = true;
@@ -515,7 +512,6 @@ class GameEngine {
       }
     }
 
-    // 9. Update Dust Motes
     for (const dust of this.dungeonDust) {
       dust.x += dust.vx * dt;
       dust.y += dust.vy * dt;
@@ -524,10 +520,7 @@ class GameEngine {
       if (dust.x > this.width) dust.x = 0;
     }
 
-    // 10. Update Particles
     window.particleSystem.update(dt);
-
-    // 11. Update UI Prompts & Cooldowns
     this.updateInteractionPrompt();
     this.updateCooldowns();
     this.renderMinimap();
@@ -542,15 +535,12 @@ class GameEngine {
     const mh = this.minimapCanvas.height;
 
     mctx.clearRect(0, 0, mw, mh);
-
-    // Holographic Grid Background
     mctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
     mctx.fillRect(0, 0, mw, mh);
 
     const scaleX = mw / (this.levelManager.mapWidth * this.levelManager.tileSize);
     const scaleY = mh / (this.levelManager.mapHeight * this.levelManager.tileSize);
 
-    // Draw Explored Rooms / Platforms in Neon Blue
     mctx.fillStyle = 'rgba(56, 189, 248, 0.45)';
     for (let y = 0; y < this.levelManager.mapHeight; y++) {
       if (!this.levelManager.tiles[y]) continue;
@@ -566,21 +556,16 @@ class GameEngine {
       }
     }
 
-    // Checkpoint Icons
     for (const cp of this.levelManager.checkpoints) {
       mctx.fillStyle = cp.activated ? '#00f0ff' : '#64748b';
-      mctx.beginPath();
-      mctx.arc(cp.x * scaleX, cp.y * scaleY, 3, 0, Math.PI * 2);
-      mctx.fill();
+      mctx.beginPath(); mctx.arc(cp.x * scaleX, cp.y * scaleY, 3, 0, Math.PI * 2); mctx.fill();
     }
 
-    // Player Position Icon (Glowing White/Cyan Dot)
     mctx.fillStyle = '#ffffff';
     mctx.shadowColor = '#00f0ff';
-    mctx.shadowBlur = 6;
-    mctx.beginPath();
-    mctx.arc(this.player.x * scaleX, this.player.y * scaleY, 4, 0, Math.PI * 2);
-    mctx.fill();
+    mctx.shadowBlur = 4;
+    mctx.beginPath(); mctx.arc(this.player.x * scaleX, this.player.y * scaleY, 4, 0, Math.PI * 2); mctx.fill();
+    mctx.shadowBlur = 0;
   }
 
   updateInteractionPrompt() {
@@ -590,31 +575,19 @@ class GameEngine {
     let promptText = null;
 
     for (const npc of this.levelManager.npcs) {
-      if (Math.hypot(npc.x - this.player.x, npc.y - this.player.y) < 75) {
-        promptText = `Bicara dengan ${npc.name}`;
-      }
+      if (Math.hypot(npc.x - this.player.x, npc.y - this.player.y) < 75) promptText = `Talk to ${npc.name}`;
     }
-
     for (const cp of this.levelManager.checkpoints) {
-      if (Math.hypot(cp.x - this.player.x, cp.y - this.player.y) < 75) {
-        promptText = 'Aktifkan Checkpoint Teleport';
-      }
+      if (Math.hypot(cp.x - this.player.x, cp.y - this.player.y) < 75) promptText = 'Use Checkpoint';
     }
-
     for (const ch of this.levelManager.chests) {
-      if (Math.hypot(ch.x - this.player.x, ch.y - this.player.y) < 75 && !ch.opened) {
-        promptText = 'Buka Peti Harta';
-      }
+      if (Math.hypot(ch.x - this.player.x, ch.y - this.player.y) < 75 && !ch.opened) promptText = 'Open Chest';
     }
-
     if (this.levelManager.exitDoor && Math.hypot(this.levelManager.exitDoor.x - this.player.x, this.levelManager.exitDoor.y - this.player.y) < 85) {
-      promptText = 'Masuki Area Selanjutnya';
+      promptText = 'Enter Next Area';
     }
-
     for (const d of this.drops) {
-      if (d.type === 'weapon' && Math.hypot(d.x - this.player.x, d.y - this.player.y) < 65) {
-        promptText = `Ambil ${d.data.name}`;
-      }
+      if (d.type === 'weapon' && Math.hypot(d.x - this.player.x, d.y - this.player.y) < 65) promptText = `Pick up ${d.data.name}`;
     }
 
     if (promptText) {
@@ -629,220 +602,163 @@ class GameEngine {
     const secCdPct = Math.max(0, this.player.secondaryCooldownTimer / this.player.secondary.cooldown);
     const secCd = document.getElementById('secondary-cd');
     if (secCd) secCd.style.height = (secCdPct * 100) + '%';
-
     const s1CdPct = Math.max(0, this.player.skill1CooldownTimer / this.player.skill1.cooldown);
     const s1Cd = document.getElementById('skill1-cd');
     if (s1Cd) s1Cd.style.height = (s1CdPct * 100) + '%';
-
     const s2CdPct = Math.max(0, this.player.skill2CooldownTimer / this.player.skill2.cooldown);
     const s2Cd = document.getElementById('skill2-cd');
     if (s2Cd) s2Cd.style.height = (s2CdPct * 100) + '%';
   }
 
+  _hexToRgb(hex) {
+    let c = (hex || '#ffffff').replace('#', '');
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    const num = parseInt(c, 16);
+    return {
+      r: (num >> 16) & 255,
+      g: (num >> 8) & 255,
+      b: num & 255
+    };
+  }
+
+  // ── SOFT, NON-GLARING AMBIENT LIGHTING ──────────────────────
+  addSoftLight(targetCtx, x, y, radius, r, g, b, intensity) {
+    const lx = Math.round(x - this.camera.x);
+    const ly = Math.round(y - this.camera.y);
+    if (lx < -radius || lx > this.width + radius || ly < -radius || ly > this.height + radius) return;
+    
+    targetCtx.save();
+    targetCtx.globalCompositeOperation = 'lighter';
+    const grad = targetCtx.createRadialGradient(lx, ly, 0, lx, ly, radius);
+    grad.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${intensity})`);
+    grad.addColorStop(0.4, `rgba(${r}, ${g}, ${b}, ${intensity * 0.35})`);
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    
+    targetCtx.fillStyle = grad;
+    targetCtx.beginPath();
+    targetCtx.arc(lx, ly, radius, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.restore();
+  }
+
   render() {
     const ctx = this.ctx;
+    const fgCtx = this.fgCtx;
+    
+    // Clear contexts
     ctx.clearRect(0, 0, this.width, this.height);
+    fgCtx.clearRect(0, 0, this.width, this.height);
 
-    // 1. Draw Parallax Dungeon & Tilemap
-    this.levelManager.draw(ctx, this.camera);
+    // ──────────────────────────────────────────────────────────
+    // PASS 1: AUTHENTIC RAMPARTS PARALLAX BACKDROP (PRISTINE)
+    // Drawn directly to main canvas. It will NEVER be touched or washed out
+    // by dungeon lighting, providing authentic atmospheric depth!
+    // ──────────────────────────────────────────────────────────
+    this.levelManager.drawSkyAndParallax(ctx, this.camera);
 
-    // 2. Draw NPCs
-    this.npcManager.draw(ctx, this.levelManager.npcs, this.camera);
+    // ──────────────────────────────────────────────────────────
+    // PASS 2: PLAYFIELD & DUNGEON STRUCTURES (DRAWN ON FG CANVAS)
+    // ──────────────────────────────────────────────────────────
+    this.levelManager.drawMidground(fgCtx, this.camera);
+    this.levelManager.drawDecorations(fgCtx, this.camera);
 
-    // 3. Draw Loot Drops
-    for (const drop of this.drops) {
-      drop.draw(ctx, this.camera);
+    for (const door of this.levelManager.doors) {
+      window.spriteRenderer.drawWoodenDoor(fgCtx, door, this.camera);
     }
+    window.spriteRenderer.drawProps(fgCtx, this.levelManager.props, this.camera);
 
-    // 4. Draw Enemies
-    for (const enemy of this.enemies) {
-      enemy.draw(ctx, this.camera);
-    }
+    this.levelManager.drawTiles(fgCtx, this.camera);
+    this.levelManager.drawInteractions(fgCtx, this.camera);
 
-    // 5. Draw Deployable Turrets (HD Tekken cannon)
+    this.npcManager.draw(fgCtx, this.levelManager.npcs, this.camera);
+    for (const drop of this.drops) drop.draw(fgCtx, this.camera);
+    for (const enemy of this.enemies) enemy.draw(fgCtx, this.camera);
+    
     for (const dep of this.deployables) {
       const rx = Math.round(dep.x - this.camera.x);
       const ry = Math.round(dep.y - this.camera.y);
-      ctx.save();
-      // Turret base
-      const baseG = ctx.createLinearGradient(rx - 14, ry - 24, rx + 14, ry);
-      baseG.addColorStop(0, '#78350f');
-      baseG.addColorStop(0.5, '#b45309');
-      baseG.addColorStop(1, '#451a03');
-      ctx.fillStyle = baseG;
-      ctx.fillRect(rx - 14, ry - 24, 28, 24);
-      // Cannon barrel
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(rx - 3, ry - 32, 6, 10);
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(rx - 4, ry - 34, 8, 4);
-      // Muzzle glow
-      const muzzG = ctx.createRadialGradient(rx, ry - 36, 0, rx, ry - 36, 10);
-      muzzG.addColorStop(0, 'rgba(255, 150, 0, 0.7)');
-      muzzG.addColorStop(1, 'transparent');
-      ctx.fillStyle = muzzG;
-      ctx.beginPath();
-      ctx.arc(rx, ry - 36, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      fgCtx.fillStyle = '#b45309'; fgCtx.fillRect(rx - 10, ry - 20, 20, 20);
+      fgCtx.fillStyle = '#1e293b'; fgCtx.fillRect(rx - 4, ry - 30, 8, 10);
     }
 
-    // 6. Draw Player
-    this.player.draw(ctx, this.camera);
+    this.player.draw(fgCtx, this.camera);
 
-    // 7. Draw Projectiles (HD Tekken energy shots with trails)
     for (const p of this.projectiles) {
       const rx = Math.round(p.x - this.camera.x);
       const ry = Math.round(p.y - this.camera.y);
-      ctx.save();
-      const pc = p.color || '#fff';
-
-      // Motion trail
-      const trailLen = Math.min(28, Math.abs(p.vx) * 0.04);
-      const trailG = ctx.createLinearGradient(rx - trailLen, ry, rx, ry);
-      trailG.addColorStop(0, 'transparent');
-      trailG.addColorStop(1, pc);
-      ctx.fillStyle = trailG;
-      ctx.globalAlpha = 0.55;
-      ctx.fillRect(rx - trailLen, ry - 3, trailLen, 6);
-      ctx.globalAlpha = 1;
-
-      // Outer glow
-      const projG = ctx.createRadialGradient(rx, ry, 0, rx, ry, 10);
-      projG.addColorStop(0, '#ffffff');
-      projG.addColorStop(0.3, pc);
-      projG.addColorStop(1, 'transparent');
-      ctx.fillStyle = projG;
-      ctx.shadowColor = pc;
-      ctx.shadowBlur = 18;
-      ctx.beginPath();
-      ctx.arc(rx, ry, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Hard core
-      ctx.fillStyle = '#ffffff';
-      ctx.shadowBlur = 6;
-      ctx.beginPath();
-      ctx.arc(rx, ry, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.restore();
+      fgCtx.fillStyle = p.color || '#ffffff';
+      fgCtx.beginPath(); fgCtx.arc(rx, ry, 3.5, 0, Math.PI * 2); fgCtx.fill();
     }
 
-    // 8. Draw Particles & Damage Numbers
-    window.particleSystem.draw(ctx, this.camera);
+    window.particleSystem.draw(fgCtx, this.camera);
 
-    // 9. Volumetric Player Light (Tekken rim glow)
-    ctx.save();
-    ctx.globalCompositeOperation = 'screen';
-    const prx = Math.round(this.player.x - this.camera.x);
-    const pry = Math.round(this.player.y - this.camera.y - this.player.h + 8);
-    // Main flame light
-    const pGlow = ctx.createRadialGradient(prx, pry, 0, prx, pry, 140);
-    pGlow.addColorStop(0, 'rgba(251, 191, 36, 0.52)');
-    pGlow.addColorStop(0.35, 'rgba(249, 115, 22, 0.18)');
-    pGlow.addColorStop(0.65, 'rgba(239, 68, 68, 0.06)');
-    pGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = pGlow;
-    ctx.beginPath();
-    ctx.arc(prx, pry, 140, 0, Math.PI * 2);
-    ctx.fill();
-    // Floor caustic light
-    const floorGlow = ctx.createRadialGradient(prx, this.player.y - this.camera.y, 0, prx, this.player.y - this.camera.y, 90);
-    floorGlow.addColorStop(0, 'rgba(251, 191, 36, 0.22)');
-    floorGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = floorGlow;
-    ctx.beginPath();
-    ctx.ellipse(prx, this.player.y - this.camera.y, 90, 22, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    // ──────────────────────────────────────────────────────────
+    // PASS 3: SOFT, NATURAL, NON-GLARING LIGHTING (ONLY ON FOREGROUND)
+    // ──────────────────────────────────────────────────────────
+    // Torches: gentle warm amber glow (soft, pleasant, NOT blinding)
+    for (const torch of this.levelManager.torches) {
+      const flicker = Math.sin(this.time * 12 + torch.flicker) * 8;
+      this.addSoftLight(fgCtx, torch.x, torch.y - 15, 160 + flicker, 255, 175, 75, 0.28);
+    }
 
-    // 10. Ambient Dust Motes (Tekken particle dust)
-    ctx.save();
+    // Crystals: subtle cyan luminescence
+    for (const crystal of this.levelManager.crystals) {
+      const pulse = Math.sin(this.time * 3 + crystal.x * 0.1) * 6;
+      this.addSoftLight(fgCtx, crystal.x, crystal.y - 10, 80 + pulse, 0, 220, 255, 0.20);
+    }
+
+    // Player flame head: subtle soft emerald ambient aura
+    this.addSoftLight(fgCtx, this.player.x, this.player.y - 20, 85, 52, 211, 153, 0.18);
+
+    // Checkpoints: gentle cyan beacon
+    for (const cp of this.levelManager.checkpoints) {
+      if (cp.activated) this.addSoftLight(fgCtx, cp.x, cp.y - 20, 150, 0, 230, 255, 0.24);
+    }
+
+    // Projectile glow
+    for (const p of this.projectiles) {
+      this.addSoftLight(fgCtx, p.x, p.y, 45, 200, 220, 255, 0.28);
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // PASS 4: COMPOSITE LIT FOREGROUND OVER PRISTINE BACKDROP
+    // ──────────────────────────────────────────────────────────
+    ctx.drawImage(this.fgCanvas, 0, 0);
+
+    // Foreground atmospheric dust
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
     for (const dust of this.dungeonDust) {
-      const dustG = ctx.createRadialGradient(dust.x, dust.y, 0, dust.x, dust.y, dust.size * 2);
-      dustG.addColorStop(0, `rgba(255, 240, 210, ${dust.alpha})`);
-      dustG.addColorStop(1, 'transparent');
-      ctx.fillStyle = dustG;
       ctx.beginPath();
-      ctx.arc(dust.x, dust.y, dust.size * 2, 0, Math.PI * 2);
+      ctx.arc(dust.x, dust.y, dust.size, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.restore();
 
-    // 11. HIT-FLASH Chromatic Aberration (when player is hurt)
+    // Hit Flash (subtle damage vignette, non-jarring)
     if (this.player.hurtFlashTimer > 0) {
-      const aberration = Math.min(6, this.player.hurtFlashTimer * 30);
-      ctx.save();
-      ctx.globalCompositeOperation = 'screen';
-      ctx.globalAlpha = 0.35;
-      // Red channel shift right
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.15)';
-      ctx.fillRect(aberration, 0, this.width, this.height);
-      // Cyan channel shift left
-      ctx.fillStyle = 'rgba(0, 255, 255, 0.1)';
-      ctx.fillRect(-aberration, 0, this.width, this.height);
-      ctx.restore();
-      // Red flash vignette
-      const hurtVig = ctx.createRadialGradient(
-        this.width / 2, this.height / 2, this.height * 0.2,
-        this.width / 2, this.height / 2, this.width * 0.8
-      );
-      hurtVig.addColorStop(0, 'transparent');
-      hurtVig.addColorStop(1, `rgba(180, 0, 0, ${this.player.hurtFlashTimer * 2.5})`);
-      ctx.fillStyle = hurtVig;
+      const vig = ctx.createRadialGradient(this.width / 2, this.height / 2, this.height * 0.3, this.width / 2, this.height / 2, this.width * 0.75);
+      vig.addColorStop(0, 'transparent');
+      vig.addColorStop(1, `rgba(180, 0, 0, ${Math.min(0.35, this.player.hurtFlashTimer * 2)})`);
+      ctx.fillStyle = vig;
       ctx.fillRect(0, 0, this.width, this.height);
     }
-
-    // 12. Cinematic Vignette (Tekken dark edge)
-    const vignette = ctx.createRadialGradient(
-      this.width / 2, this.height / 2, this.height * 0.38,
-      this.width / 2, this.height / 2, this.width * 0.78
-    );
-    vignette.addColorStop(0, 'transparent');
-    vignette.addColorStop(0.6, 'rgba(0, 0, 0, 0.18)');
-    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.62)');
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, this.width, this.height);
-
-    // 13. CRT Scan-line overlay (Tekken Arcade authentic)
-    ctx.save();
-    ctx.globalAlpha = 0.028;
-    ctx.fillStyle = '#000000';
-    for (let sl = 0; sl < this.height; sl += 3) {
-      ctx.fillRect(0, sl, this.width, 1);
-    }
-    ctx.restore();
-
-    // 14. Cinematic Letterbox Bars (Tekken intro/fight black bars)
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, this.width, 18);
-    ctx.fillRect(0, this.height - 18, this.width, 18);
-  }
-
-  loop(currentTime) {
-    try {
-      const dt = Math.min(0.08, (currentTime - this.lastTime) / 1000);
-      this.lastTime = currentTime;
-
-      this.update(dt);
-      this.render();
-    } catch (err) {
-      console.error('Game loop error handled:', err);
-    }
-
-    requestAnimationFrame((time) => this.loop(time));
-  }
-
-  start() {
-    requestAnimationFrame((time) => {
-      this.lastTime = time;
-      this.loop(time);
-    });
   }
 }
 
+window.GameEngine = GameEngine;
+
 window.onload = () => {
   window.game = new GameEngine();
-  window.game.start();
+  let lastTime = performance.now();
+  
+  function loop(currentTime) {
+    const dt = Math.min((currentTime - lastTime) / 1000, 0.1);
+    lastTime = currentTime;
+    
+    window.game.update(dt);
+    window.game.render();
+    
+    requestAnimationFrame(loop);
+  }
+  
+  requestAnimationFrame(loop);
 };

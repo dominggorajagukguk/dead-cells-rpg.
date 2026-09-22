@@ -35,8 +35,10 @@ class Player {
 
     // Combat
     this.comboStep = 0;
+    this.comboResetTimer = 0;
     this.isAttacking = false;
     this.attackTimer = 0;
+    this.currentAttackDuration = 0.22;
     this.attackCooldown = 0;
     this.attackProgress = 0;
 
@@ -241,9 +243,16 @@ class Player {
       if (this.vy > 950) this.vy = 950;
     }
 
+    if (this.comboResetTimer > 0) {
+      this.comboResetTimer -= dt;
+      if (this.comboResetTimer <= 0) {
+        this.comboStep = 0;
+      }
+    }
+
     if (this.isAttacking) {
       this.attackTimer -= dt;
-      this.attackProgress = 1 - (this.attackTimer / (this.primary.attackSpeed || 0.22));
+      this.attackProgress = Math.min(1, Math.max(0, 1 - (this.attackTimer / (this.currentAttackDuration || 0.22))));
       if (this.attackTimer <= 0) {
         this.isAttacking = false;
       }
@@ -256,37 +265,61 @@ class Player {
 
   performPrimaryAttack(game) {
     this.isAttacking = true;
+    if (this.comboResetTimer <= 0) {
+      this.comboStep = 0;
+    }
     this.comboStep = (this.comboStep % 3) + 1;
-    this.attackTimer = this.primary.attackSpeed || 0.22;
-    this.vx = this.facing * 160;
+    this.comboResetTimer = 0.85;
+
+    const baseSpeed = this.primary.attackSpeed || 0.22;
+    if (this.comboStep === 1) {
+      this.currentAttackDuration = baseSpeed;
+      this.vx = this.facing * 200;
+    } else if (this.comboStep === 2) {
+      this.currentAttackDuration = baseSpeed * 1.1;
+      this.vx = this.facing * 160;
+      window.particleSystem.addSparks(this.x + this.facing * 15, this.y, '#ffd700', 8);
+    } else {
+      this.currentAttackDuration = baseSpeed * 1.4;
+      this.vx = this.facing * 260;
+      if (this.grounded) {
+        this.vy = -180; // Small leaping hop for execution slam
+      }
+    }
+    this.attackTimer = this.currentAttackDuration;
 
     window.soundEngine.playSlash(this.comboStep);
 
-    const isSpin = this.comboStep === 3;
-    const slashX = this.x + (isSpin ? 0 : this.facing * 35);
-    const slashY = this.y - 12;
+    const isSpin = false;
+    const slashType = this.comboStep === 1 ? 'horizontal' : this.comboStep === 2 ? 'uppercut' : 'slam';
+    const range = this.comboStep === 3 ? this.primary.range + 45 : (this.comboStep === 2 ? this.primary.range + 25 : this.primary.range + 15);
+    const slashX = this.x + this.facing * (this.comboStep === 3 ? 42 : (this.comboStep === 2 ? 32 : 36));
+    const slashY = this.y - (this.comboStep === 2 ? 26 : (this.comboStep === 3 ? 12 : 18));
 
-    window.particleSystem.addSlash(slashX, slashY, this.facing, this.primary.color || '#ff1744', this.primary.range + 15, isSpin);
+    window.particleSystem.addSlash(slashX, slashY, this.facing, this.primary.color || '#ff1744', range, isSpin, slashType, this.comboStep);
 
-    const isCrit = (this.comboStep === 3 && this.primary.id === 'twin_daggers') || Math.random() < 0.25;
-    const dmg = isCrit ? Math.round(this.getPrimaryDamage() * (this.primary.critMultiplier || 1.6)) : this.getPrimaryDamage();
+    const isCrit = (this.comboStep === 3 && this.primary.id === 'twin_daggers') || (this.comboStep === 3) || Math.random() < 0.22;
+    const critMult = this.comboStep === 3 ? (this.primary.critMultiplier || 1.8) : (this.primary.critMultiplier || 1.5);
+    const dmg = isCrit ? Math.round(this.getPrimaryDamage() * critMult) : this.getPrimaryDamage();
 
     let hitAny = false;
     game.enemies.forEach(enemy => {
       if (enemy.dead) return;
-      const dx = isSpin ? Math.abs(enemy.x - this.x) : (enemy.x - this.x) * this.facing;
+      const dx = (enemy.x - this.x) * this.facing;
       const dy = Math.abs(enemy.y - this.y);
-      if (dx > 0 && dx < this.primary.range + 35 && dy < 60) {
+      if (dx > -10 && dx < range + 35 && dy < 75) {
         enemy.takeDamage(dmg, isCrit, this.facing, game);
         hitAny = true;
       }
     });
 
     if (hitAny) {
-      game.camera.shake(isCrit ? 10 : 5, 0.16);
-      game.triggerHitStop(0.04);
+      const shakeIntensity = this.comboStep === 3 ? (isCrit ? 16 : 10) : (isCrit ? 9 : 5);
+      const shakeDuration = this.comboStep === 3 ? 0.25 : 0.16;
+      game.camera.shake(shakeIntensity, shakeDuration);
+      game.triggerHitStop(this.comboStep === 3 ? (isCrit ? 0.08 : 0.05) : (isCrit ? 0.05 : 0.03));
       if (this.hp < this.rallyHp) {
-        const recoverAmt = Math.min(14, this.rallyHp - this.hp);
+        const recoverAmt = Math.min(16, this.rallyHp - this.hp);
         this.hp += recoverAmt;
         window.particleSystem.addDamageText(this.x, this.y - 35, recoverAmt, 'rally');
       }

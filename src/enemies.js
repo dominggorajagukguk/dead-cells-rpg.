@@ -287,7 +287,7 @@ class ShieldEnemy extends BaseEnemy {
       return;
     }
 
-    window.spriteRenderer.drawShieldKnight(ctx, this);
+    window.spriteRenderer.drawShieldEnemy(ctx, this);
 
     const hpPct = Math.max(0, this.hp / this.maxHp);
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
@@ -329,7 +329,7 @@ class PhaserEnemy extends BaseEnemy {
     ctx.translate(rx, ry);
     if (this.facing < 0) ctx.scale(-1, 1);
 
-    window.spriteRenderer.drawPhaser(ctx, this);
+    window.spriteRenderer.drawInquisitor(ctx, this);
 
     ctx.restore();
   }
@@ -474,7 +474,7 @@ class BossMalakor extends BaseEnemy {
       return;
     }
 
-    window.spriteRenderer.drawBossMalakor(ctx, this);
+    window.spriteRenderer.drawBoss(ctx, this);
 
     ctx.restore();
   }

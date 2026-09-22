@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@500;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P:wght@700;900&family=Silkscreen:wght@500;600;700;900&display=swap');
 
 :root {
   --bg-dark: #07070c;
@@ -24,7 +24,7 @@
 body {
   background: #020205;
   color: var(--text-main);
-  font-family: 'Rajdhani', sans-serif;
+  font-family: 'Silkscreen', sans-serif;
   overflow: hidden;
   width: 100vw;
   height: 100vh;
@@ -80,7 +80,7 @@ body {
 }
 
 .stage-badge {
-  font-family: 'Cinzel', serif;
+  font-family: 'Press Start 2P', serif;
   font-size: 19px;
   font-weight: 900;
   letter-spacing: 2px;
@@ -88,7 +88,7 @@ body {
   text-shadow: 0 0 14px rgba(157, 78, 221, 0.8);
   background: rgba(15, 12, 24, 0.75);
   padding: 6px 18px;
-  border-radius: 4px;
+  border-radius: 0px;
   border-left: 4px solid var(--tactics);
   border-bottom: 1px solid rgba(255,255,255,0.1);
   backdrop-filter: blur(8px);
@@ -118,7 +118,7 @@ body {
   justify-content: space-between;
   width: 100%;
   margin-bottom: 4px;
-  font-family: 'Cinzel', serif;
+  font-family: 'Press Start 2P', serif;
   font-weight: 900;
   font-size: 20px;
   letter-spacing: 2px;
@@ -131,9 +131,9 @@ body {
   height: 24px;
   background: #14050a;
   border: 2px solid #991b1b;
-  border-radius: 4px;
+  border-radius: 0px;
   overflow: hidden;
-  box-shadow: 0 0 25px rgba(255, 30, 60, 0.6);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
   position: relative;
 }
 
@@ -141,7 +141,7 @@ body {
   width: 100%;
   height: 100%;
   background: linear-gradient(90deg, #7f1d1d, #ef4444, #f59e0b);
-  box-shadow: 0 0 16px #ef4444;
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
   transition: width 0.1s linear;
 }
 
@@ -191,7 +191,7 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 16px;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
 }
 
 .slots-container {
@@ -206,39 +206,39 @@ body {
   height: 62px;
   background: rgba(15, 18, 28, 0.92);
   border: 2px solid rgba(255, 255, 255, 0.25);
-  border-radius: 6px;
+  border-radius: 0px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.8);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
   backdrop-filter: blur(8px);
   transition: transform 0.1s ease, border-color 0.2s ease;
 }
 
 .slot-card.flask {
   border-color: #38bdf8;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
 }
 
 .slot-card.primary {
   border-color: #e63946;
-  box-shadow: 0 0 14px rgba(230, 57, 70, 0.4);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
 }
 
 .slot-card.secondary {
   border-color: #9d4edd;
-  box-shadow: 0 0 14px rgba(157, 78, 221, 0.4);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
 }
 
 .slot-card.skill1 {
   border-color: #2ec4b6;
-  box-shadow: 0 0 14px rgba(46, 196, 182, 0.4);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
 }
 
 .slot-card.skill2 {
   border-color: #f59e0b;
-  box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
 }
 
 .slot-tier {
@@ -264,9 +264,9 @@ body {
   font-size: 10px;
   font-weight: 900;
   padding: 1px 5px;
-  border-radius: 3px;
+  border-radius: 0px;
   color: #f8fafc;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
 }
 
 .slot-cooldown {
@@ -327,8 +327,8 @@ body {
   height: 100px;
   background: rgba(10, 15, 30, 0.75);
   border: 1.5px solid rgba(56, 189, 248, 0.4);
-  border-radius: 4px;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.25), inset 0 0 12px rgba(0,0,0,0.8);
+  border-radius: 0px;
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
   backdrop-filter: blur(6px);
 }
 
@@ -354,9 +354,9 @@ body {
   padding: 0 8px;
   font-weight: 900;
   font-size: 16px;
-  border-radius: 3px;
+  border-radius: 0px;
   color: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.7);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
 }
 
 .stat-box.brutality {
@@ -380,8 +380,8 @@ body {
   height: 22px;
   background: #0f0f14;
   border: 1.5px solid #22c55e;
-  border-radius: 3px;
-  box-shadow: 0 0 16px rgba(34, 197, 94, 0.35), inset 0 0 8px rgba(0,0,0,0.9);
+  border-radius: 0px;
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
   overflow: hidden;
 }
 
@@ -402,7 +402,7 @@ body {
   height: 100%;
   width: 100%;
   background: linear-gradient(90deg, #059669, #10b981, #34d399);
-  box-shadow: 0 0 14px #10b981;
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
   transition: width 0.08s ease-out;
 }
 
@@ -427,14 +427,14 @@ body {
   background: rgba(15, 12, 24, 0.94);
   border: 1.5px solid var(--gold);
   padding: 8px 24px;
-  border-radius: 20px;
+  border-radius: 0px;
   font-size: 16px;
   font-weight: 800;
   color: #fff;
   display: flex;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 0 20px rgba(255, 183, 3, 0.5);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -450,7 +450,7 @@ body {
   color: #000;
   font-weight: 900;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: 0px;
 }
 
 /* Toast Notifications */
@@ -463,12 +463,12 @@ body {
   border: 2px solid var(--cell);
   color: #fff;
   padding: 10px 30px;
-  border-radius: 8px;
-  font-family: 'Cinzel', serif;
+  border-radius: 0px;
+  font-family: 'Press Start 2P', serif;
   font-size: 20px;
   font-weight: 900;
   letter-spacing: 1.5px;
-  box-shadow: 0 0 30px rgba(0, 240, 255, 0.6);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease;
@@ -506,11 +506,11 @@ body {
 .modal-card {
   background: #0f121d;
   border: 2px solid var(--tactics);
-  border-radius: 12px;
+  border-radius: 0px;
   padding: 28px 36px;
   max-width: 620px;
   width: 90%;
-  box-shadow: 0 0 40px rgba(157, 78, 221, 0.5), inset 0 0 20px rgba(0,0,0,0.9);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -527,7 +527,7 @@ body {
 .npc-avatar {
   width: 56px;
   height: 56px;
-  border-radius: 8px;
+  border-radius: 0px;
   border: 2px solid var(--gold);
   background: #1e293b;
   display: flex;
@@ -537,7 +537,7 @@ body {
 }
 
 .modal-title {
-  font-family: 'Cinzel', serif;
+  font-family: 'Press Start 2P', serif;
   font-size: 26px;
   font-weight: 900;
   color: #fff;
@@ -563,7 +563,7 @@ body {
 .shop-item-card {
   background: rgba(30, 41, 59, 0.7);
   border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 8px;
+  border-radius: 0px;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -576,7 +576,7 @@ body {
   background: rgba(59, 130, 246, 0.25);
   border-color: var(--gold);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(255, 183, 3, 0.3);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
 }
 
 .shop-item-name {
@@ -609,11 +609,11 @@ body {
 
 .btn {
   padding: 10px 24px;
-  font-family: 'Rajdhani', sans-serif;
+  font-family: 'Silkscreen', sans-serif;
   font-size: 17px;
   font-weight: 800;
   letter-spacing: 1px;
-  border-radius: 6px;
+  border-radius: 0px;
   cursor: pointer;
   border: none;
   transition: all 0.15s ease;
@@ -622,12 +622,12 @@ body {
 .btn-primary {
   background: linear-gradient(135deg, #e63946, #9d4edd);
   color: #fff;
-  box-shadow: 0 0 20px rgba(230, 57, 70, 0.5);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
 }
 
 .btn-primary:hover {
   transform: scale(1.05);
-  box-shadow: 0 0 25px rgba(230, 57, 70, 0.8);
+  box-shadow: 4px 4px 0px rgba(0,0,0,1);
 }
 
 .btn-secondary {
@@ -640,3 +640,4 @@ body {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
 }
+
